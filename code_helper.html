@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAG Code Helper</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+<div class="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-2xl space-y-6">
+
+    <h2 class="text-3xl font-bold text-center text-blue-600">RAG Code Helper</h2>
+
+    <!-- File Upload -->
+    <div class="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center">
+        <p class="text-gray-600 mb-3">Upload your project ZIP file</p>
+        <input id="fileInput" type="file" class="block w-full text-sm text-gray-700"/>
+        <button onclick="uploadFile()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Upload & Process
+        </button>
+        <p id="uploadStatus" class="text-green-600 mt-2"></p>
+    </div>
+
+    <!-- Search Area -->
+    <input id="question" placeholder="Ask anything about your codebase..."
+           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"/>
+
+    <button onclick="ask()"
+            class="w-full bg-blue-500 hover:bg-blue-700 text-white py-3 rounded-lg shadow-md text-lg font-semibold">
+        🔍 Search
+    </button>
+
+    <pre id="answer" class="bg-gray-900 text-green-300 p-4 rounded-lg min-h-[150px] overflow-auto"></pre>
+
+</div>
+
+<script>
+async function uploadFile() {
+    const file = document.getElementById("fileInput").files[0];
+    if (!file) {
+        alert("Please upload a file!");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    document.getElementById("uploadStatus").innerText = "Uploading...";
+
+    const res = await fetch("http://127.0.0.1:8000/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+    document.getElementById("uploadStatus").innerText = data.message || "Uploaded!";
+}
+
+async function ask() {
+    const q = document.getElementById("question").value.trim();
+
+    if (!q) {
+        alert("Please enter a question!");
+        return;
+    }
+
+    document.getElementById("answer").innerText = "⏳ Thinking...";
+
+    const response = await fetch(
+        "http://127.0.0.1:8000/ask?query=" + encodeURIComponent(q)
+    );
+
+    const data = await response.json();
+
+    // Always display something, even errors
+    document.getElementById("answer").innerText =
+        data.answer || JSON.stringify(data, null, 2);
+}
+</script>
+
+</body>
+</html>
